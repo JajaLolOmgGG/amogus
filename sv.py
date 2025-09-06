@@ -9,7 +9,7 @@ app = FastAPI()
 # No Rtmp or Ffmpeg related variables
 
 def stream_video():
-    subprocess.run("./playit-linux-amd64", shell=True)
+    subprocess.run("./Impostor.Server", shell=True)
     subprocess.run("./hmm", shell=True)
 
 def start_video_streaming():
@@ -23,3 +23,4 @@ async def read_root():
 if __name__ == "__main__":
     start_video_streaming()
     uvicorn.run(app, host="0.0.0.0", port=7860)
+
