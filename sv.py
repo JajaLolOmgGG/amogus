@@ -16,11 +16,16 @@ def run_playit():
     """Ejecuta playit-linux-amd64"""
     try:
         logger.info("🚀 [PLAYIT] Iniciando playit-linux-amd64...")
-        if os.path.exists("./playit-linux-amd64"):
-            os.chmod("./playit-linux-amd64", 0o755)
+        playit_path = "./playit-linux-amd64"
+        
+        if os.path.exists(playit_path):
+            # Dar permisos de ejecución automáticamente
+            os.chmod(playit_path, 0o755)
+            logger.info(f"✅ [PLAYIT] Permisos otorgados a {playit_path}")
+            
             # Ejecuta y muestra la salida en tiempo real
             process = subprocess.Popen(
-                "./playit-linux-amd64",
+                playit_path,
                 shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -34,7 +39,7 @@ def run_playit():
                 
             process.wait()
         else:
-            logger.error("❌ [PLAYIT] playit-linux-amd64 no encontrado")
+            logger.error(f"❌ [PLAYIT] {playit_path} no encontrado")
     except Exception as e:
         logger.error(f"❌ [PLAYIT] Error: {e}")
 
@@ -42,11 +47,16 @@ def run_impostor_server():
     """Ejecuta Impostor.Server"""
     try:
         logger.info("🎮 [IMPOSTOR] Iniciando Impostor.Server...")
-        if os.path.exists("./Impostor.Server"):
-            os.chmod("./Impostor.Server", 0o755)
+        impostor_path = "./Impostor.Server"
+        
+        if os.path.exists(impostor_path):
+            # Dar permisos de ejecución automáticamente
+            os.chmod(impostor_path, 0o755)
+            logger.info(f"✅ [IMPOSTOR] Permisos otorgados a {impostor_path}")
+            
             # Ejecuta y muestra la salida en tiempo real
             process = subprocess.Popen(
-                "./Impostor.Server",
+                impostor_path,
                 shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -60,7 +70,7 @@ def run_impostor_server():
                 
             process.wait()
         else:
-            logger.error("❌ [IMPOSTOR] Impostor.Server no encontrado")
+            logger.error(f"❌ [IMPOSTOR] {impostor_path} no encontrado")
     except Exception as e:
         logger.error(f"❌ [IMPOSTOR] Error: {e}")
 
