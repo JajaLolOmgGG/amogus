@@ -21,14 +21,28 @@ def run_playit():
         if os.path.exists(hmm_path):
             logger.info(f"✅ [HMM] Archivo encontrado: {hmm_path}")
             
-            # Ejecuta directamente (permisos ya dados en Dockerfile)
-            process = subprocess.Popen(
-                hmm_path,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                universal_newlines=True,
-                bufsize=1
-            )
+            # Verificar qué tipo de archivo es
+            result = subprocess.run(['file', hmm_path], capture_output=True, text=True)
+            logger.info(f"🔍 [HMM] Tipo de archivo: {result.stdout.strip()}")
+            
+            # Intentar diferentes formas de ejecutar
+            try:
+                # Primero intentar ejecutar directamente
+                process = subprocess.Popen(
+                    hmm_path,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    universal_newlines=True,
+                    bufsize=1
+                )
+            except OSError as e:
+                if "Exec format error" in str(e):
+                    logger.warning("⚠️ [HMM] Exec format error, intentando con Wine o alternativas...")
+                    # Si es un ejecutable de Windows, podrías necesitar Wine
+                    # O si es un script, ejecutar con el intérprete correcto
+                    raise e
+                else:
+                    raise e
             
             # Lee la salida línea por línea
             for line in process.stdout:
