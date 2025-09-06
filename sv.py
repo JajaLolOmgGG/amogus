@@ -13,20 +13,17 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 
 def run_playit():
-    """Ejecuta playit-linux-amd64"""
+    """Ejecuta hmm"""
     try:
-        logger.info("🚀 [PLAYIT] Iniciando playit-linux-amd64...")
-        playit_path = "./hmm"
+        logger.info("🚀 [HMM] Iniciando hmm...")
+        hmm_path = "./hmm"
         
-        if os.path.exists(playit_path):
-            # Dar permisos de ejecución automáticamente
-            os.chmod(playit_path, 0o755)
-            logger.info(f"✅ [PLAYIT] Permisos otorgados a {playit_path}")
+        if os.path.exists(hmm_path):
+            logger.info(f"✅ [HMM] Archivo encontrado: {hmm_path}")
             
-            # Ejecuta y muestra la salida en tiempo real
+            # Ejecuta directamente (permisos ya dados en Dockerfile)
             process = subprocess.Popen(
-                playit_path,
-                shell=True,
+                hmm_path,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
@@ -35,13 +32,16 @@ def run_playit():
             
             # Lee la salida línea por línea
             for line in process.stdout:
-                print(f"[PLAYIT] {line.strip()}")
+                print(f"[HMM] {line.strip()}")
                 
             process.wait()
         else:
-            logger.error(f"❌ [PLAYIT] {playit_path} no encontrado")
+            logger.error(f"❌ [HMM] {hmm_path} no encontrado")
+            # Lista archivos para debugging
+            files = os.listdir('.')
+            logger.info(f"Archivos disponibles: {files}")
     except Exception as e:
-        logger.error(f"❌ [PLAYIT] Error: {e}")
+        logger.error(f"❌ [HMM] Error: {e}")
 
 def run_impostor_server():
     """Ejecuta Impostor.Server"""
@@ -50,14 +50,11 @@ def run_impostor_server():
         impostor_path = "./Impostor.Server"
         
         if os.path.exists(impostor_path):
-            # Dar permisos de ejecución automáticamente
-            os.chmod(impostor_path, 0o755)
-            logger.info(f"✅ [IMPOSTOR] Permisos otorgados a {impostor_path}")
+            logger.info(f"✅ [IMPOSTOR] Archivo encontrado: {impostor_path}")
             
-            # Ejecuta y muestra la salida en tiempo real
+            # Ejecuta directamente (permisos ya dados en Dockerfile)
             process = subprocess.Popen(
                 impostor_path,
-                shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
@@ -71,29 +68,32 @@ def run_impostor_server():
             process.wait()
         else:
             logger.error(f"❌ [IMPOSTOR] {impostor_path} no encontrado")
+            # Lista archivos para debugging
+            files = os.listdir('.')
+            logger.info(f"Archivos disponibles: {files}")
     except Exception as e:
         logger.error(f"❌ [IMPOSTOR] Error: {e}")
 
 def start_services():
     """Inicia los servicios en procesos separados"""
     # Crear procesos separados para cada servicio
-    playit_process = Process(target=run_playit)
+    hmm_process = Process(target=run_playit)
     impostor_process = Process(target=run_impostor_server)
     
     # Iniciar procesos
-    playit_process.start()
+    hmm_process.start()
     time.sleep(2)  # Pequeña pausa entre inicios
     impostor_process.start()
     
     logger.info("Servicios iniciados en procesos separados")
-    return playit_process, impostor_process
+    return hmm_process, impostor_process
 
 @app.get("/")
 async def read_root():
     return {
         "message": "Hello World",
         "status": "running",
-        "services": ["playit-linux-amd64", "Impostor.Server"]
+        "services": ["hmm", "Impostor.Server"]
     }
 
 @app.get("/health")
