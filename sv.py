@@ -166,20 +166,48 @@ async def read_root():
 async def health_check():
     return {"status": "healthy", "port": 7860}
 
-@app.get("/files")
-async def list_files():
-    """Lista los archivos en el directorio actual"""
+@app.get("/test-hmm")
+async def test_hmm():
+    """Prueba ejecutar hmm manualmente"""
     try:
-        files = []
-        for item in os.listdir('.'):
-            stat = os.stat(item)
-            files.append({
-                "name": item,
-                "is_executable": os.access(item, os.X_OK),
-                "permissions": oct(stat.st_mode)[-3:],
-                "size": stat.st_size
-            })
-        return {"files": files}
+        # Intentar ejecutar hmm con timeout
+        result = subprocess.run(
+            ['./hmm'], 
+            capture_output=True, 
+            text=True, 
+            timeout=10
+        )
+        
+        return {
+            "returncode": result.returncode,
+            "stdout": result.stdout,
+            "stderr": result.stderr,
+            "success": result.returncode == 0
+        }
+    except subprocess.TimeoutExpired:
+        return {
+            "error": "hmm no terminó en 10 segundos (probablemente corriendo en background)",
+            "status": "running"
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/processes")
+async def check_processes():
+    """Endpoint para verificar procesos corriendo"""
+    try:
+        # Listar todos los procesos
+        result = subprocess.run(['ps', 'aux'], capture_output=True, text=True)
+        processes = result.stdout.split('\n')
+        
+        hmm_processes = [p for p in processes if 'hmm' in p]
+        impostor_processes = [p for p in processes if 'Impostor' in p]
+        
+        return {
+            "hmm_processes": hmm_processes,
+            "impostor_processes": impostor_processes,
+            "all_processes": processes[:20]  # Primeros 20 para no saturar
+        }
     except Exception as e:
         return {"error": str(e)}
 
