@@ -25,33 +25,56 @@ def run_playit():
             result = subprocess.run(['file', hmm_path], capture_output=True, text=True)
             logger.info(f"🔍 [HMM] Tipo de archivo: {result.stdout.strip()}")
             
-            # Intentar diferentes formas de ejecutar
-            try:
-                # Primero intentar ejecutar directamente
-                process = subprocess.Popen(
-                    hmm_path,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
-                    universal_newlines=True,
-                    bufsize=1
-                )
-            except OSError as e:
-                if "Exec format error" in str(e):
-                    logger.warning("⚠️ [HMM] Exec format error, intentando con Wine o alternativas...")
-                    # Si es un ejecutable de Windows, podrías necesitar Wine
-                    # O si es un script, ejecutar con el intérprete correcto
-                    raise e
-                else:
-                    raise e
+            # Ejecutar sin capturar output para ver salida inmediata
+            logger.info("🚀 [HMM] Ejecutando proceso...")
+            process = subprocess.Popen(
+                [hmm_path],  # Usar lista en lugar de string
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True,
+                bufsize=0  # Sin buffer
+            )
             
-            # Lee la salida línea por línea
-            for line in process.stdout:
-                print(f"[HMM] {line.strip()}")
+            # Función para leer output en tiempo real
+            import threading
+            
+            def read_stdout():
+                for line in iter(process.stdout.readline, ''):
+                    if line:
+                        print(f"[HMM] {line.strip()}", flush=True)
+            
+            def read_stderr():
+                for line in iter(process.stderr.readline, ''):
+                    if line:
+                        print(f"[HMM-ERR] {line.strip()}", flush=True)
+            
+            # Crear hilos para leer stdout y stderr
+            stdout_thread = threading.Thread(target=read_stdout)
+            stderr_thread = threading.Thread(target=read_stderr)
+            
+            stdout_thread.daemon = True
+            stderr_thread.daemon = True
+            
+            stdout_thread.start()
+            stderr_thread.start()
+            
+            logger.info("📡 [HMM] Proceso iniciado, esperando salida...")
+            
+            # Esperar un poco para ver si hay salida inicial
+            import time
+            time.sleep(3)
+            
+            # Verificar si el proceso sigue vivo
+            if process.poll() is None:
+                logger.info("✅ [HMM] Proceso corriendo correctamente")
+            else:
+                logger.error(f"❌ [HMM] Proceso terminó con código: {process.returncode}")
                 
+            # Mantener el proceso vivo
             process.wait()
+                
         else:
             logger.error(f"❌ [HMM] {hmm_path} no encontrado")
-            # Lista archivos para debugging
             files = os.listdir('.')
             logger.info(f"Archivos disponibles: {files}")
     except Exception as e:
@@ -66,23 +89,52 @@ def run_impostor_server():
         if os.path.exists(impostor_path):
             logger.info(f"✅ [IMPOSTOR] Archivo encontrado: {impostor_path}")
             
-            # Ejecuta directamente (permisos ya dados en Dockerfile)
+            logger.info("🚀 [IMPOSTOR] Ejecutando proceso...")
             process = subprocess.Popen(
-                impostor_path,
+                [impostor_path],  # Usar lista
                 stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
+                stderr=subprocess.PIPE,
                 universal_newlines=True,
-                bufsize=1
+                bufsize=0  # Sin buffer
             )
             
-            # Lee la salida línea por línea
-            for line in process.stdout:
-                print(f"[IMPOSTOR] {line.strip()}")
-                
+            import threading
+            
+            def read_stdout():
+                for line in iter(process.stdout.readline, ''):
+                    if line:
+                        print(f"[IMPOSTOR] {line.strip()}", flush=True)
+            
+            def read_stderr():
+                for line in iter(process.stderr.readline, ''):
+                    if line:
+                        print(f"[IMPOSTOR-ERR] {line.strip()}", flush=True)
+            
+            stdout_thread = threading.Thread(target=read_stdout)
+            stderr_thread = threading.Thread(target=read_stderr)
+            
+            stdout_thread.daemon = True
+            stderr_thread.daemon = True
+            
+            stdout_thread.start()
+            stderr_thread.start()
+            
+            logger.info("📡 [IMPOSTOR] Proceso iniciado, esperando salida...")
+            
+            # Esperar un poco para ver salida inicial
+            import time
+            time.sleep(3)
+            
+            # Verificar estado del proceso
+            if process.poll() is None:
+                logger.info("✅ [IMPOSTOR] Proceso corriendo correctamente")
+            else:
+                logger.error(f"❌ [IMPOSTOR] Proceso terminó con código: {process.returncode}")
+            
             process.wait()
+            
         else:
             logger.error(f"❌ [IMPOSTOR] {impostor_path} no encontrado")
-            # Lista archivos para debugging
             files = os.listdir('.')
             logger.info(f"Archivos disponibles: {files}")
     except Exception as e:
