@@ -19,11 +19,12 @@
     "ConnectionTimeout": 7000
   },
   "Compatibility": {
-    "AllowFutureGameVersions": true,
-    "AllowVersionMixing": true
+    "AllowFutureGameVersions": false,
+    "AllowVersionMixing": false
   },
   "Debug": {
     "GameRecorderEnabled": true,
     "GameRecorderPath": ""
   }
 }
+
