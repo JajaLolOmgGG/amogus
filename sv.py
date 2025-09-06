@@ -16,7 +16,7 @@ def run_playit():
     """Ejecuta playit-linux-amd64"""
     try:
         logger.info("🚀 [PLAYIT] Iniciando playit-linux-amd64...")
-        playit_path = "./playit-linux-amd64"
+        playit_path = "./hmm"
         
         if os.path.exists(playit_path):
             # Dar permisos de ejecución automáticamente
@@ -100,16 +100,22 @@ async def read_root():
 async def health_check():
     return {"status": "healthy", "port": 7860}
 
-@app.get("/processes")
-async def check_processes():
-    """Endpoint para verificar si los procesos están corriendo"""
-    playit_running = any("playit" in str(p.info['cmdline']) for p in psutil.process_iter(['pid', 'cmdline']) if p.info['cmdline'])
-    impostor_running = any("Impostor" in str(p.info['cmdline']) for p in psutil.process_iter(['pid', 'cmdline']) if p.info['cmdline'])
-    
-    return {
-        "playit_running": playit_running,
-        "impostor_running": impostor_running
-    }
+@app.get("/files")
+async def list_files():
+    """Lista los archivos en el directorio actual"""
+    try:
+        files = []
+        for item in os.listdir('.'):
+            stat = os.stat(item)
+            files.append({
+                "name": item,
+                "is_executable": os.access(item, os.X_OK),
+                "permissions": oct(stat.st_mode)[-3:],
+                "size": stat.st_size
+            })
+        return {"files": files}
+    except Exception as e:
+        return {"error": str(e)}
 
 if __name__ == "__main__":
     logger.info("Iniciando aplicación...")
